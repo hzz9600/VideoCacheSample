@@ -1,0 +1,22 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdk 32
+    buildToolsVersion '25.0.2'
+
+    defaultConfig {
+        minSdkVersion 9
+        targetSdkVersion 32
+        versionCode 22
+        versionName '2.7.1'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
+    }
+}
+
+dependencies {
+    implementation 'org.slf4j:slf4j-android:1.7.21'
+}
