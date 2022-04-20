@@ -1,6 +1,8 @@
 # VideoCacheSample
 基于AndroidVideoCache 实现短视频秒加载边下边播；M3u8支持
 
+如果你的原项目本身就集成了AndroidVideoCache库，可以直接依赖我的Library，没有冲突Api。只对源库少量文件做了修改。
+
 ### AndroidVideoCache(改造版)
 [点击跳转到 AndroidVideoCache](https://github.com/danikula/AndroidVideoCache)
 
