@@ -12,7 +12,7 @@
   PreloadHelper.getInstance().setPreloadSize(512*1024);
   //加载制定url链接，url为源地址(非代理url)
   PreloadHelper.getInstance().load(cacheServer,url);
-  //停止所有预加载。线程池默认有3个预加载线程,只能停止还没执行的
+  //停止所有预加载。线程池默认有5个预加载线程,只能停止还没执行的
   PreloadHelper.getInstance().stopAllPreload();
 //
 ```
@@ -22,7 +22,7 @@
 1. 获取代理M3u8链接，访问本地代理。
 2. 如果文件还没缓存，去下载并保存到本地，有下载直接读缓存(缓存的文件和其它格式一样，内容也是源文件的内容)。
 3. 读取缓存，解析文件内容，替换分片视频地址指向本地代理-M3u8ProxyUtil:rewriteProxyBody
-4. 讲上一步替换后的内容，相应到socket也就是播放器。播放器自动播放指向代理的分片，然后走普通媒体缓存逻辑。
+4. 将上一步替换后的内容，响应到socket也就是播放器。播放器自动播放指向代理的分片，然后走普通媒体缓存逻辑。
 
 注意一下M3u8始终要经过我们的代理服务，而普通媒体文件缓存后是直接返回File地址。
 HttpProxyCacheServer.getProxyUrl(String url)
