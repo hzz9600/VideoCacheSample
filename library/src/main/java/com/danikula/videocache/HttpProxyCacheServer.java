@@ -114,7 +114,7 @@ public class HttpProxyCacheServer {
      * @return a wrapped by proxy url if file is not fully cached or url pointed to cache file otherwise (if {@code allowCachedFileUri} is {@code true}).
      */
     public String getProxyUrl(String url, boolean allowCachedFileUri) {
-        if (allowCachedFileUri && isCached(url)) {
+        if (allowCachedFileUri && isCached(url) && !M3u8ProxyUtil.isM3u8Url(url)) {//m3u8始终走代理
             File cacheFile = getCacheFile(url);
             touchFileSafely(cacheFile);
             return Uri.fromFile(cacheFile).toString();
@@ -189,7 +189,7 @@ public class HttpProxyCacheServer {
         return String.format(Locale.US, "http://%s:%d/%s", PROXY_HOST, port, ProxyCacheUtils.encode(url));
     }
 
-    private File getCacheFile(String url) {
+    public File getCacheFile(String url) {
         File cacheDir = config.cacheRoot;
         String fileName = config.fileNameGenerator.generate(url);
         return new File(cacheDir, fileName);

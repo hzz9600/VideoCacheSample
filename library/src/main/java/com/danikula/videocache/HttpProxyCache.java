@@ -3,11 +3,14 @@ package com.danikula.videocache;
 import android.text.TextUtils;
 
 import com.danikula.videocache.file.FileCache;
+import com.danikula.videocache.preload.PreloadLog;
 
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.net.URL;
 import java.util.Locale;
 
 import static com.danikula.videocache.ProxyCacheUtils.DEFAULT_BUFFER_SIZE;
@@ -37,10 +40,15 @@ class HttpProxyCache extends ProxyCache {
 
     public void processRequest(GetRequest request, Socket socket) throws IOException, ProxyCacheException {
         OutputStream out = new BufferedOutputStream(socket.getOutputStream());
+        long offset = request.rangeOffset;
+
+        //m3u8单独处理,需要获取到内容后进行替换
+        if (M3u8ProxyUtil.isM3u8Url(request.uri)) {
+            responseM3u8WithCache(socket, out, offset);
+            return;
+        }
         String responseHeaders = newResponseHeaders(request);
         out.write(responseHeaders.getBytes("UTF-8"));
-
-        long offset = request.rangeOffset;
         if (isUseCache(request)) {
             responseWithCache(out, offset);
         } else {
@@ -71,6 +79,42 @@ class HttpProxyCache extends ProxyCache {
                 .append(mimeKnown ? format("Content-Type: %s\n", mime) : "")
                 .append("\n") // headers end
                 .toString();
+    }
+
+    private void responseM3u8WithCache(Socket socket, OutputStream out, long offset) throws ProxyCacheException, IOException {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        //边下边存，同时记录内容
+        responseWithCache(bos, offset);
+
+        String host = socket.getLocalAddress().getHostAddress();
+        int port = socket.getLocalPort();
+        String body = bos.toString();
+        URL url = new URL(source.getUrl());
+        String proxyAddress = format("http://%s:%d", host, port);
+
+        String requestHost = url.getPort() > 0 ? url.getHost() + ":" + url.getPort() : url.getHost();
+        String requestAddress = format("%s://%s", url.getProtocol(), requestHost);
+        //将预先下载完的内容替换ts为代理链接
+        String resultProxyBody = M3u8ProxyUtil.rewriteProxyBody(proxyAddress, requestAddress, body);
+
+        //响应回播放器
+        String mime = source.getMime();
+        boolean mimeKnown = !TextUtils.isEmpty(mime);
+        long length = resultProxyBody.length();
+        String outHttp = new StringBuilder()
+                .append("HTTP/1.1 200 OK\n")
+                .append("Accept-Ranges: bytes\n")
+                .append(format("Content-Length: %d\n", length))
+                .append(mimeKnown ? format("Content-Type: %s\n", mime) : "")
+                .append("\n") // headers end
+                .append(resultProxyBody)
+                .append("\n") // http content end
+                .toString();
+
+        PreloadLog.debug(outHttp);//打印相应到播放器的内容
+        out.write(outHttp.getBytes("UTF-8"));
+        out.flush();
+        bos.close();
     }
 
     private void responseWithCache(OutputStream out, long offset) throws ProxyCacheException, IOException {

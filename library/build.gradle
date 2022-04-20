@@ -9,6 +9,8 @@ android {
         targetSdkVersion 32
         versionCode 22
         versionName '2.7.1'
+        //AS版本太高了,自带的VERSION_NAME已经被移除
+        buildConfigField 'String', 'VERSION_NAME', '"2.7.1"'
     }
 
     compileOptions {
