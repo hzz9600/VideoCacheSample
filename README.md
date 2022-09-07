@@ -41,3 +41,23 @@ HttpProxyCacheServer.getProxyUrl(String url)
         return isAlive() ? appendToProxyUrl(url) : url;
     }
 ```
+
+#### 偶然出现的代理服务ping报错解决办法
+com.danikula.videocache.ProxyCacheException: Error pinging server (attempts: 3, max timeout: 280). If you see this message, please, report at https://github.com/danikula/AndroidVideoCache/issues/134.
+
+1. add ` android:usesCleartextTraffic="true" ` into AndroidManifest.xml application;
+2. add ` android:networkSecurityConfig="@xml/network_security_config" ` into AndroidManifest.xml application;
+```
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">127.0.0.1</domain>
+    </domain-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>
+```
+3. add `<uses-library android:name="org.apache.http.legacy" android:required="false" />` into AndroidManifest.xml application;
